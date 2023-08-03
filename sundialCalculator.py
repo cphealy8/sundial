@@ -7,6 +7,8 @@ longDegrees = -112.056938
 hourAngle = getHourAngle(hour)
 timezone = 'USMountain'
 
+days = np.array(range(1,365))
+
 def find_nearest(array, value):
     array = np.asarray(array)
     idx = (np.abs(array - value)).argmin()
@@ -49,4 +51,17 @@ import matplotlib.pyplot as plt
 
 
 plt.plot(add_zeros_between_elements(xPoint),add_zeros_between_elements(yPoint))
+plt.show()
+
+def get_declination_degrees(day):
+    rad = np.sin(np.radians(-23.44))*np.cos(np.radians((360/365.25)*(day+10)+(360/np.pi)*0.0167*np.sin(np.radians((360/365.24)*(day-2)))))
+    
+    declination_degrees = np.degrees(np.arcsin(rad))
+    return(declination_degrees)
+
+# def shadow_length(gnomon_height,day):
+#     sun_altitude_radians = np.radians(get_declination_degrees(day))
+#     return(gnomon_height/np.tan(sun_altitude_radians))
+
+plt.plot(days,precise_declination_degrees(days))
 plt.show()
