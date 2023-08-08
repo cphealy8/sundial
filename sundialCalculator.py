@@ -1,23 +1,23 @@
 import numpy as np
 hour = 11
 
-hours = np.array(range(8,18))
+hours = np.array(range(6,20))
 latDegrees = 41.117842
 longDegrees = -112.056938
 timezone = 'USMountain'
 gnomonHeight = 10
 
-days = np.array(range(1,365))
+days = np.append(np.array(range(1,365)),1)
 
 def find_nearest(array, value):
     array = np.asarray(array)
     idx = (np.abs(array - value)).argmin()
     return array[idx]
 
-def getDialAngle(hour,latDegrees,longDegrees,timezone):
-    def Hour2Angle(hour):
+def Hour2Angle(hour):
         return(np.radians(15*(hour-12)))
-    
+
+def getDialAngle(hour,latDegrees,longDegrees,timezone):
     def getLongCorrection(longDegrees,timezone):
         meridians = {'USPacific':-120,'USMountain':-105,'USCentral':-90,
              'USEastern':-75,'Atlantic':-60,'Greenwich':0,
@@ -49,7 +49,7 @@ def add_zeros_between_elements(arr):
 
 import matplotlib.pyplot as plt
 
-
+plt.close()
 plt.plot(add_zeros_between_elements(xPoint),add_zeros_between_elements(yPoint))
 plt.show()
 
@@ -74,7 +74,55 @@ DecDegrees = get_declination_degrees(days)
 
 altitude = get_solar_altitude(DecDegrees,latDegrees,HourDegree)
 
-shadowLen = gnomonHeight/np.tan(altitude)
 
-plt.plot(days,np.tan(np.radians(get_declination_degrees(days))))
+
+def getShadowLength(hour,gnomonHeight,day,latDegrees,longDegrees,timezone):
+    HourDegree = getDialAngle(hour,latDegrees,longDegrees,timezone)
+    DecDegrees = get_declination_degrees(day)
+    altitude = get_solar_altitude(DecDegrees,latDegrees,HourDegree)
+    shadowLen = gnomonHeight/np.tan(altitude)
+    return(shadowLen)
+
+plt.plot(days,getShadowLength(12,gnomonHeight,days,latDegrees,longDegrees,timezone))
+plt.show()
+
+
+def equation_of_time(day):
+    B = 360*(day-81)/365
+    EoT = 9.87*np.sin(np.radians(2*B))-7.67*np.sin(np.radians(B+78.7))
+    return(EoT)
+
+def eot_adjustment_degrees(day):
+    eot = equation_of_time(day)
+    return(np.degrees(Hour2Angle(eot/60))+180)
+
+plt.plot(days,eot_adjustment_degrees(days))
+plt.show()
+
+def get_true_angle(day,hour,latDegrees,longDegrees,timezone):
+    longCorrectedAngle = getDialAngle(hour,latDegrees,longDegrees,timezone)
+    EoTAdjustment = eot_adjustment_degrees(day)
+    
+    TrueAngle = longCorrectedAngle+EoTAdjustment
+    return(TrueAngle)
+
+TrueAngles = get_true_angle(days,12,latDegrees,longDegrees,timezone)
+
+plt.plot(days,TrueAngles)
+plt.show()
+
+def getDial(day,hour,gnomonHeight,latDegrees,longDegrees,timezone):
+    r = getShadowLength(hour,gnomonHeight,day,latDegrees,longDegrees,timezone)
+    angle = get_true_angle(day,hour,latDegrees,longDegrees,timezone)+90
+    
+    x = r*np.cos(np.radians(angle))
+    y = r*np.sin(np.radians(angle))
+    
+    dial = {'x': x,'y': y}
+    return(dial)
+    
+plt.close()
+for hour in range(8,18):
+    dial = getDial(days,hour,gnomonHeight,latDegrees,longDegrees,timezone)
+    plt.plot(dial['x'],dial['y'])
 plt.show()
