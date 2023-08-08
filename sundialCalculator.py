@@ -4,8 +4,8 @@ hour = 11
 hours = np.array(range(8,18))
 latDegrees = 41.117842
 longDegrees = -112.056938
-hourAngle = getHourAngle(hour)
 timezone = 'USMountain'
+gnomonHeight = 10
 
 days = np.array(range(1,365))
 
@@ -59,9 +59,22 @@ def get_declination_degrees(day):
     declination_degrees = np.degrees(np.arcsin(rad))
     return(declination_degrees)
 
-# def shadow_length(gnomon_height,day):
-#     sun_altitude_radians = np.radians(get_declination_degrees(day))
-#     return(gnomon_height/np.tan(sun_altitude_radians))
+def get_solar_altitude(decDegrees,latDegrees,hourDegrees):
+        latRad = np.radians(latDegrees)
+        decRad = np.radians(decDegrees)
+        hourRad = np.radians(hourDegrees)
+        
+        a = np.sin(latRad)*np.sin(decRad)+np.cos(latRad)*np.cos(decRad)*np.cos(hourRad)
+        return(np.arcsin(a))
 
-plt.plot(days,precise_declination_degrees(days))
+
+
+HourDegree = getDialAngle(12,latDegrees,longDegrees,timezone)
+DecDegrees = get_declination_degrees(days)
+
+altitude = get_solar_altitude(DecDegrees,latDegrees,HourDegree)
+
+shadowLen = gnomonHeight/np.tan(altitude)
+
+plt.plot(days,np.tan(np.radians(get_declination_degrees(days))))
 plt.show()
